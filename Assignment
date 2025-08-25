@@ -1,0 +1,195 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <iomanip>
+#include <limits>
+#include <regex>
+using namespace std;
+
+struct Event {
+    int eventID;
+    string name;
+    double fee;
+    int slots;
+};
+
+struct User {
+    string name;
+    string email;
+    vector<Event> registered;
+};
+
+// Payment function with regex validation
+int payment(double total) {
+    string input;
+    int method;
+    regex validPattern("^[1-4]$"); // Only digits 1 to 4 allowed
+
+    do {
+        cout << "\nSelect your payment method:\n";
+        cout << "1. Credit Card\n";
+        cout << "2. Online Banking\n";
+        cout << "3. eWallet\n";
+        cout << "4. Cash\n";
+        cout << "Enter your choice (1-4): ";
+        cin >> input;
+
+        if (!regex_match(input, validPattern)) {
+            cout << "Invalid input. Please enter a number from 1 to 4.\n";
+            method = 0;
+            continue;
+        }
+
+        method = stoi(input);
+        switch (method) {
+        case 1:
+            cout << "Processing Credit Card payment of RM"
+                << fixed << setprecision(2) << total << "...\n";
+            break;
+        case 2:
+            cout << "Redirecting to Online Banking portal...\n";
+            break;
+        case 3:
+            cout << "Launching eWallet interface...\n";
+            break;
+        case 4:
+            cout << "Please pay cash at the registration counter.\n";
+            break;
+        }
+    } while (method == 0);
+
+    cout << "Payment successful!\n";
+    return method;
+}
+
+int main() {
+    vector<Event> events = {
+        {1, "Court A1", 18.0, 1},
+        {2, "Court A2", 18.0, 1},
+        {3, "Court A3", 18.0, 1},
+        {4, "Court A3", 18.0, 1},
+        {5, "Court A3", 18.0, 1 },
+        {6, "Court A3", 18.0, 1 },
+        {7, "Court A3", 18.0, 1 },
+        {8, "Court A3", 18.0, 1 },
+        {9, "Court A3", 18.0, 1 },
+
+    };
+
+    vector<User> users;
+    char newUserChoice;
+
+    do {
+        User user;
+        string choice;
+        int choiceNum;
+        string choice2;
+        double total = 0;
+
+        regex choicePattern("^[0-9]+$");
+
+
+        cout << "\nEnter your name: ";
+        getline(cin, user.name);
+
+        do {
+            cout << "\nAvailable Events:\n";
+            for (const auto& e : events) {
+                cout << "ID: " << e.eventID << " | " << e.name
+                    << " | Fee: RM" << fixed << setprecision(2) << e.fee
+                    << " | Slots left: " << e.slots << endl;
+            }
+
+            while (true) {
+                cout << "Enter Event ID to register (0 to finish): ";
+                if (cin >> choice) {
+                    if (!regex_match(choice, choicePattern)) {
+                        cout << "Invalid input. Please enter a number.\n";
+                        continue;
+                    }
+
+                    choiceNum = stoi(choice);
+
+                    if (choiceNum < 0) {
+                        cout << "Invalid input. Please enter a number.\n";
+                    }
+                    else {
+                        break;
+                    }
+                }
+                else {
+                    cout << "Invalid input. Please enter a number.\n";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
+            }
+
+            bool found = false;
+            for (auto& e : events) {
+                if (e.eventID == choiceNum) {
+                    found = true;
+                    bool alreadyRegistered = false;
+                    for (const auto& r : user.registered) {
+                        if (r.eventID == choiceNum) {
+                            alreadyRegistered = true;
+                            break;
+                        }
+                    }
+
+                    if (alreadyRegistered) {
+                        cout << "You have already registered for " << e.name << ". Cannot register twice.\n";
+                    }
+                    else if (e.slots > 0) {
+                        e.slots--;
+                        user.registered.push_back(e);
+                        cout << "Registered for " << e.name << " successfully.\n";
+                    }
+                    else {
+                        cout << "Sorry, event is full.\n";
+                    }
+                    break;
+                }
+            }
+
+            if (!found && choiceNum != 0) {
+                cout << "Invalid Event ID.\n";
+            }
+
+            do {
+                cout << "Do you want to register another event? (Y/N): ";
+                cin >> choice2;
+                if (choice2 == "Y" || choice2 == "y" || choice2 == "N" || choice2 == "n")
+                    break;
+                cout << "Invalid input! Please enter Y or N only.\n";
+            } while (true);
+
+        } while (choice2 == "Y" || choice2 == "y");
+
+
+
+        cout << "\nHi " << user.name << ", you registered for:\n";
+        for (const auto& e : user.registered) {
+            cout << "- " << e.name << " (RM" << fixed << setprecision(2) << e.fee << ")\n";
+            total += e.fee;
+        }
+        cout << "Total fee: RM" << fixed << setprecision(2) << total << endl;
+
+        if (total > 0) {
+            payment(total); // Call payment function
+        }
+
+        users.push_back(user);
+
+        do {
+            cout << "\nIs there another user who wants to register? (Y/N): ";
+            cin >> newUserChoice;
+            if (newUserChoice == 'Y' || newUserChoice == 'y' || newUserChoice == 'N' || newUserChoice == 'n')
+                break;
+            cout << "Invalid input! Please enter Y or N only.\n";
+        } while (true);
+        cin.ignore(); //use to ignore "" in  line 85
+    } while (newUserChoice == 'Y' || newUserChoice == 'y');
+
+    cout << "\nThank you! Registration session ended.\n";
+    return 0;
+}
